@@ -1,0 +1,286 @@
+CZK PNG : https://gofile.io/d/7HiD6L
+CZKAPI CODES : https://direct-link.net/1242051/ZmLTWRjbR5pw
+velocityapi DOWNLOAD :  https://direct-link.net/1242051/I0OHQChZFSFq
+
+---------------------------------------------------------
+scripthub
+
+
+Holly freak bob sexy scripthub???
+
+        #region scripthub ahh stuff
+        private void SearchTextBox_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            if (e.KeyChar == (char)Keys.Enter)
+            {
+                e.Handled = true;
+                SearchScripts(SearchTextBox.Text);
+            }
+        }
+
+        private async void SearchScripts(string searchQuery)
+        {
+            flowLayoutPanel1.Controls.Clear();
+            flowLayoutPanel1.FlowDirection = FlowDirection.LeftToRight;
+            flowLayoutPanel1.WrapContents = true;
+
+            try
+            {
+                using (HttpClient client = new HttpClient())
+                {
+                    string apiUrl = $"https://scriptblox.com/api/script/search?q={Uri.EscapeDataString(searchQuery)}&mode=free&max=20";
+                    HttpResponseMessage response = await client.GetAsync(apiUrl);
+
+                    if (response.IsSuccessStatusCode)
+                    {
+                        string responseBody = await response.Content.ReadAsStringAsync();
+
+                        JObject jsonResponse = JObject.Parse(responseBody);
+                        JArray scripts = (JArray)jsonResponse["result"]["scripts"];
+
+                        if (scripts != null && scripts.Count > 0)
+                        {
+                            foreach (var script in scripts)
+                            {
+                                await CreateScriptPanel(script);
+                            }
+
+
+                        }
+                        else
+                        {
+                            MessageBox.Show("No scripts found for the given search query.", "No Results", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        }
+                    }
+                    else if (response.StatusCode == HttpStatusCode.NotFound)
+                    {
+                        MessageBox.Show("The requested resource was not found. Please check the API endpoint or your search query.", "Not Found Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                    else
+                    {
+                        MessageBox.Show($"Error: {response.StatusCode} - {response.ReasonPhrase}", "ScriptBlox API Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error: {ex.Message}", "ScriptBlox API Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private async Task CreateScriptPanel(JToken script)
+        {
+            Guna2Panel scriptPanel = new Guna2Panel
+            {
+                Width = 212,
+                Height = 256,
+                BorderRadius = 10,
+                BorderColor = Color.FromArgb(30, 30, 30),
+                BorderThickness = 1,
+                FillColor = Color.Black,
+                Margin = new Padding(10)
+            };
+            PictureBox scriptImage = new PictureBox
+            {
+                Width = 184,
+                Height = 140,
+                SizeMode = PictureBoxSizeMode.Zoom,
+                Location = new Point(11, 7)
+            };
+
+            string imageUrl = script["game"]?["imageUrl"]?.ToString() ?? "";
+            if (!string.IsNullOrEmpty(imageUrl))
+            {
+                try
+                {
+                    using (HttpClient httpClient = new HttpClient())
+                    {
+                        byte[] imageData = await httpClient.GetByteArrayAsync(imageUrl);
+                        using (MemoryStream ms = new MemoryStream(imageData))
+                        {
+                            Image originalImage = Image.FromStream(ms);
+                            scriptImage.Image = RoundCorners(originalImage, 10);
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error loading image: {ex.Message}");
+                    Image defaultimage = Properties.Resources.Noimagefound; ;
+                    scriptImage.Image = RoundCorners(defaultimage, 10);
+                }
+            }
+
+            Label scriptName = new Label
+            {
+                Text = script["title"]?.ToString() ?? "Untitled Script",
+                ForeColor = Color.DarkGray,
+                Font = new Font("Arial", 10, FontStyle.Bold),
+                Location = new Point(7, 155),
+                Width = 170,
+                Height = 35,
+                TextAlign = ContentAlignment.MiddleLeft,
+                BackColor = Color.Transparent
+            };
+
+            Label verifiedLabel = new Label
+            {
+                Text = script["verified"]?.ToObject<bool>() == true ? "Verified" : "Unverified",
+                ForeColor = script["verified"]?.ToObject<bool>() == true ? Color.DarkGray : Color.DarkGray,
+                Font = new Font("Arial", 8, FontStyle.Bold),
+                Location = new Point(7, 187),
+                Width = 170,
+                TextAlign = ContentAlignment.MiddleLeft,
+                BackColor = Color.Transparent
+            };
+
+            Guna2Button executeButton = new Guna2Button
+            {
+                Image = Resources.play_button_arrowhead,
+                ImageSize = new Size (10,10),
+                ForeColor = Color.DarkGray,
+                FillColor = Color.FromArgb(10, 10, 10),
+                PressedColor = Color.FromArgb(10, 10, 10),
+                Size = new Size(35, 28),
+                BorderRadius = 5,
+                Animated = true,
+                Location = new Point(5, 224)
+            };
+
+            executeButton.Click += (s, e) =>
+            {
+                string scriptContent = script["script"]?.ToString() ?? "";
+                CzkAPI.CzkFUNC.ExecuteScript(scriptContent);
+            };
+
+            Guna2Button copyButton = new Guna2Button
+            {
+                Image = Resources.copy,
+                ImageSize = new Size(10, 10),
+                ForeColor = Color.DarkGray,
+                FillColor = Color.FromArgb(10, 10, 10),
+                PressedColor = Color.FromArgb(10, 10, 10),
+                Size = new Size(35, 28),
+                BorderRadius = 5,
+                Animated = true,
+                Location = new Point(46, 224)
+            };
+
+            copyButton.Click += (s, e) =>
+            {
+                string scriptContent = script["script"]?.ToString() ?? "";
+                Clipboard.SetText(scriptContent);
+            };
+
+            scriptPanel.Controls.Add(scriptImage);
+            scriptPanel.Controls.Add(scriptName);
+            scriptPanel.Controls.Add(verifiedLabel);
+            scriptPanel.Controls.Add(executeButton);
+            scriptPanel.Controls.Add(copyButton);
+
+            flowLayoutPanel1.Controls.Add(scriptPanel);
+        }
+
+        private void CenterResults()
+        {
+            int totalWidth = flowLayoutPanel1.Controls.Cast<Control>().Sum(c => c.Width + c.Margin.Horizontal);
+            int panelsPerRow = flowLayoutPanel1.Width / (180 + 20); // 180 is panel width, 20 is total horizontal margin
+            int leftPadding = (flowLayoutPanel1.Width - (panelsPerRow * (180 + 20))) / 2;
+
+            flowLayoutPanel1.Padding = new Padding(leftPadding, 10, 10, 10);
+        }
+        //Credits discord.gg/realczk
+        private Image RoundCorners(Image image, int cornerRadius)
+        {
+            Bitmap roundedImage = new Bitmap(image.Width, image.Height);
+            using (Graphics g = Graphics.FromImage(roundedImage))
+            {
+                g.Clear(Color.Transparent);
+                g.SmoothingMode = SmoothingMode.AntiAlias;
+                using (GraphicsPath path = new GraphicsPath())
+                {
+                    path.AddArc(0, 0, cornerRadius * 2, cornerRadius * 2, 180, 90);
+                    path.AddArc(image.Width - cornerRadius * 2, 0, cornerRadius * 2, cornerRadius * 2, 270, 90);
+                    path.AddArc(image.Width - cornerRadius * 2, image.Height - cornerRadius * 2, cornerRadius * 2, cornerRadius * 2, 0, 90);
+                    path.AddArc(0, image.Height - cornerRadius * 2, cornerRadius * 2, cornerRadius * 2, 90, 90);
+                    path.CloseFigure();
+                    g.SetClip(path);
+                    g.DrawImage(image, 0, 0, image.Width, image.Height);
+                }
+            }
+            return roundedImage;
+        }
+        #endregion
+
+
+-------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+            SearchTextBox.KeyPress += SearchTextBox_KeyPress;
+            SearchTextBox.SelectAll();
+
+            SearchTextBox.Text = "Script";
+            SearchScripts(SearchTextBox.Text);
+            SearchTextBox.Text = "";
+
+
+
+
+
+
+
+
+
+
+---------------------------
+
+Open file 
+            try
+            {
+                SaveFileDialog saveFileDialog1 = new SaveFileDialog
+                {
+                    Filter = "Lua Files (*.lua)|*.lua|Text Files (*.txt)|*.txt",
+                    DefaultExt = "lua",
+                    Title = "Save Lua or Text File"
+                };
+
+                if (saveFileDialog1.ShowDialog() == DialogResult.OK)
+                {
+                    string textToSave = await Editor.ExecuteScriptAsync("GetText();");
+                    string rawText = JsonConvert.DeserializeObject<string>(textToSave);
+                    File.WriteAllText(saveFileDialog1.FileName, rawText);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"An error occurred: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+
+
+
+-----------------------------------------
+clear editor             await Editor.ExecuteScriptAsync($"SetText(``);");
+
+
+Run editor
+        private async void InitializeAsync()
+        {
+            try
+            {
+                await Editor.EnsureCoreWebView2Async(null);
+                Editor.CoreWebView2.Navigate(new Uri($"file:///{Directory.GetCurrentDirectory()}/Monaco/Monacoe.html").ToString());
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error initializing WebView2: {ex.Message}", "Initialization Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+      form1:      InitializeAsync();
+
+
+execute             string script = "editor.getValue();";
+            string result = await Editor.CoreWebView2.ExecuteScriptAsync(script);
+            string editorText = Regex.Unescape(result.Trim('"'));
+    CzkFUNC.Execute(editorText);
+
